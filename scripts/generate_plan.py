@@ -16,7 +16,7 @@ def get_market_data():
     
     try:
         # Obtener precio actual y velas recientes de XAUUSD
-      url = f"https://api.twelvedata.com/time_series?symbol=GOLD&interval=1h&outputsize=100&apikey={TWELVE_DATA_KEY}"
+        url = f"https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=1h&outputsize=100&apikey={TWELVE_DATA_KEY}"
         
         response = requests.get(url, timeout=10)
         data = response.json()
