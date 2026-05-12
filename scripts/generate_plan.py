@@ -47,10 +47,10 @@ def get_market_data():
                     sma50 = sum(prices[-50:]) / 50 if len(prices) >= 50 else current_price
                     
                     # Calcular niveles dinámicos basados en el precio real
-                    support = round(current_price - (current_price * 0.008), 0)
-                    resistance = round(current_price + (current_price * 0.008), 0)
-                    breakout_up = round(current_price + (current_price * 0.015), 0)
-                    breakdown_down = round(current_price - (current_price * 0.015), 0)
+                    support = round(current_price - 40, 0)
+                    resistance = round(current_price + 40, 0)
+                    breakout_up = round(current_price + 80, 0)
+                    breakdown_down = round(current_price - 80, 0)
                     
                     return {
                         'current_price': current_price,
