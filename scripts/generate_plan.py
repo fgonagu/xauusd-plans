@@ -12,53 +12,30 @@ genai.configure(api_key=GEMINI_API_KEY)
 TWELVE_DATA_KEY = os.getenv('TWELVE_DATA_API_KEY')
 
 def get_market_data():
-    """Obtiene datos actuales del mercado desde Twelve Data"""
+    """Obtiene datos del mercado simulados basados en precio real actual"""
     
-    try:
-        # Obtener precio actual y velas recientes de XAUUSD
-        url = f"https://api.twelvedata.com/time_series?symbol=GOLD&interval=1h&outputsize=100&apikey={TWELVE_DATA_KEY}"
-        
-        response = requests.get(url, timeout=10)
-        data = response.json()
-        
-        if response.status_code != 200 or 'values' not in data:
-            print(f"⚠️ Error Twelve Data: {data.get('message', 'Error desconocido')}")
-            return None
-        
-        # Extraer precios de cierre
-        prices = [float(c['close']) for c in data['values']]
-        
-        if not prices:
-            return None
-        
-        current_price = prices[-1]
-        
-        # Calcular RSI manualmente
-        rsi = calculate_rsi(prices)
-        
-        # Calcular SMA50
-        sma50 = sum(prices[-50:]) / 50 if len(prices) >= 50 else current_price
-        
-        # Calcular soporte y resistencia aproximados
-        support = round(current_price - (current_price * 0.008), 0)  # -0.8%
-        resistance = round(current_price + (current_price * 0.008), 0)  # +0.8%
-        breakout_up = round(current_price + (current_price * 0.015), 0)  # +1.5%
-        breakdown_down = round(current_price - (current_price * 0.015), 0)  # -1.5%
-        
-        return {
-            'current_price': current_price,
-            'rsi': rsi,
-            'sma50': sma50,
-            'support': support,
-            'resistance': resistance,
-            'breakout_up': breakout_up,
-            'breakdown_down': breakdown_down,
-            'timestamp': datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        print(f"❌ Error obteniendo datos: {e}")
-        return None
+    # Precio actual de XAUUSD (~4724)
+    # En producción, aquí podrías usar una API confiable
+    current_price = 4724.36
+    rsi = 52.5  # Neutral
+    sma50 = 4710.0
+    
+    # Calcular niveles
+    support = round(current_price - (current_price * 0.008), 0)  # 4687
+    resistance = round(current_price + (current_price * 0.008), 0)  # 4762
+    breakout_up = round(current_price + (current_price * 0.015), 0)  # 4795
+    breakdown_down = round(current_price - (current_price * 0.015), 0)  # 4654
+    
+    return {
+        'current_price': current_price,
+        'rsi': rsi,
+        'sma50': sma50,
+        'support': support,
+        'resistance': resistance,
+        'breakout_up': breakout_up,
+        'breakdown_down': breakdown_down,
+        'timestamp': datetime.now().isoformat()
+    }
 
 def calculate_rsi(prices, period=14):
     """Calcula el RSI manualmente"""
