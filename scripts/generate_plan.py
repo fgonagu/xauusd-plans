@@ -2,11 +2,12 @@ import json
 import os
 import requests
 from datetime import datetime, timedelta
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
-# Configurar Gemini
+# Configurar Gemini con la NUEVA librería
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 # Configurar Twelve Data
 TWELVE_DATA_KEY = os.getenv('TWELVE_DATA_API_KEY')
@@ -14,31 +15,26 @@ TWELVE_DATA_KEY = os.getenv('TWELVE_DATA_API_KEY')
 def get_spain_date():
     """Devuelve la fecha actual en horario español"""
     utc_now = datetime.utcnow()
-    # Horario de verano en España: desde finales de marzo hasta finales de octubre
     if 4 <= utc_now.month <= 10:
-        hours_offset = 2  # Horario de verano (UTC+2)
+        hours_offset = 2
     else:
-        hours_offset = 1  # Horario de invierno (UTC+1)
-    
+        hours_offset = 1
     spain_now = utc_now + timedelta(hours=hours_offset)
     return spain_now.strftime("%Y-%m-%d")
 
 def get_market_data():
     """Obtiene datos actuales del mercado desde Twelve Data"""
-    
     try:
         # Probar diferentes formatos de símbolo
         symbols_to_try = ["XAU/USD", "XAUUSD", "GOLD", "XAU"]
         
         for symbol in symbols_to_try:
             url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1h&outputsize=100&apikey={TWELVE_DATA_KEY}"
-            
             print(f"📡 Probando símbolo: {symbol}")
             response = requests.get(url, timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
-                
                 if 'values' in data and data['values']:
                     print(f"✅ Conectado con símbolo: {symbol}")
                     prices = [float(c['close']) for c in data['values']]
@@ -46,7 +42,7 @@ def get_market_data():
                     rsi = calculate_rsi(prices)
                     sma50 = sum(prices[-50:]) / 50 if len(prices) >= 50 else current_price
                     
-                    # Calcular niveles dinámicos basados en el precio real
+                    # Niveles dinámicos
                     support = round(current_price - 40, 0)
                     resistance = round(current_price + 40, 0)
                     breakout_up = round(current_price + 80, 0)
@@ -67,33 +63,25 @@ def get_market_data():
         
         print("❌ No se pudo conectar con ningún símbolo")
         return None
-            
     except Exception as e:
         print(f"❌ Excepción: {type(e).__name__}: {e}")
         return None
 
 def calculate_rsi(prices, period=14):
     """Calcula el RSI manualmente"""
-    
     if len(prices) < period + 1:
         return 50
-    
     deltas = [prices[i] - prices[i-1] for i in range(1, period + 1)]
     gain = sum(d for d in deltas if d > 0) / period
     loss = abs(sum(d for d in deltas if d < 0) / period)
-    
     if loss == 0:
         return 100
-    
     rs = gain / loss
     rsi = 100 - (100 / (1 + rs))
-    
     return round(rsi, 1)
 
 def analyze_with_gemini(market_data):
-    """Usa Gemini para generar el plan de trading"""
-    
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    """Usa Gemini (nueva librería) para generar el plan de trading"""
     
     prompt = f"""
     Eres un experto trader de XAUUSD (oro). Basado en estos datos actuales:
@@ -122,19 +110,19 @@ def analyze_with_gemini(market_data):
         "orders": [
             {{
                 "id": "ORDEN_PRINCIPAL",
-                "type": "buylimit",
-                "entry": {market_data['support']:.0f},
-                "sl": {market_data['support'] - 40:.0f},
-                "tp": [{market_data['resistance']:.0f}, {market_data['resistance'] + 30:.0f}, {market_data['breakout_up']:.0f}],
+                "type": "selllimit",
+                "entry": {market_data['resistance']:.0f},
+                "sl": {market_data['resistance'] + 40:.0f},
+                "tp": [{market_data['support']:.0f}, {market_data['support'] - 30:.0f}],
                 "max_lots": 0.03
             }},
             {{
                 "id": "ORDEN_SECUNDARIA",
-                "type": "buystop",
-                "entry": {market_data['breakout_up']:.0f},
-                "sl": {market_data['breakout_up'] - 35:.0f},
-                "tp": [{market_data['breakout_up'] + 40:.0f}, {market_data['breakout_up'] + 80:.0f}],
-                "max_lots": 0.02
+                "type": "sellstop",
+                "entry": {market_data['breakdown_down']:.0f},
+                "sl": {market_data['breakdown_down'] + 35:.0f},
+                "tp": [{market_data['breakdown_down'] - 40:.0f}, {market_data['breakdown_down'] - 80:.0f}],
+                "max_lots": 0.04
             }}
         ]
     }}
@@ -143,17 +131,25 @@ def analyze_with_gemini(market_data):
     """
     
     try:
-        response = model.generate_content(prompt)
+        # Usar el nuevo modelo
+        response = client.models.generate_content(
+            model="gemini-2.0-flash-exp",
+            contents=prompt,
+            config=types.GenerateContentConfig(temperature=0.2)
+        )
         
-        # Extraer JSON de la respuesta
-        import re
-        json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
-        
-        if json_match:
-            strategy = json.loads(json_match.group())
-            return strategy
+        if response.text:
+            import re
+            json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
+            if json_match:
+                strategy = json.loads(json_match.group())
+                print(f"✨ Gemini ha generado la estrategia: {strategy.get('bias', 'neutral')}")
+                return strategy
+            else:
+                print("⚠️ No se pudo extraer JSON de la respuesta de Gemini")
+                return None
         else:
-            print("⚠️ No se pudo extraer JSON de la respuesta de Gemini")
+            print("⚠️ Respuesta vacía de Gemini")
             return None
             
     except Exception as e:
@@ -166,7 +162,7 @@ def generate_json():
     print("🤖 INICIANDO ANÁLISIS DIARIO XAUUSD")
     print("=" * 50)
     
-    # 1. Obtener datos del mercado
+    # 1. Obtener datos del mercado (Twelve Data)
     print("📊 Obteniendo datos del mercado...")
     market_data = get_market_data()
     
@@ -177,7 +173,6 @@ def generate_json():
     print(f"💰 Precio actual: {market_data['current_price']:.2f} USD")
     print(f"📈 RSI: {market_data['rsi']}")
     print(f"🎯 Soporte: {market_data['support']:.0f} | Resistencia: {market_data['resistance']:.0f}")
-    print(f"🚀 Breakout Up: {market_data['breakout_up']:.0f} | Breakdown Down: {market_data['breakdown_down']:.0f}")
     
     # 2. Analizar con Gemini
     print("🧠 Analizando con Gemini...")
@@ -185,13 +180,13 @@ def generate_json():
     
     # 3. Si Gemini falla, usar estrategia por defecto
     if not strategy:
-        print("⚠️ Usando estrategia por defecto basada en RSI")
+        print("⚠️ Gemini falló, usando estrategia por defecto basada en RSI")
         strategy = default_strategy(market_data)
     
     print(f"🎯 Sesgo detectado: {strategy.get('bias', 'neutral').upper()}")
     print(f"📋 Órdenes generadas: {len(strategy.get('orders', []))}")
     
-    # 4. Construir JSON final con fecha en horario español
+    # 4. Construir JSON final
     json_plan = {
         "date": get_spain_date(),
         "symbols": [
@@ -234,22 +229,8 @@ def default_strategy(market_data):
             "bias": "alcista",
             "reason": f"RSI en {rsi} indicando momentum alcista",
             "orders": [
-                {
-                    "id": "BUY_LIMIT_CORE",
-                    "type": "buylimit",
-                    "entry": market_data['support'],
-                    "sl": market_data['support'] - 40,
-                    "tp": [market_data['resistance'], market_data['resistance'] + 30, market_data['breakout_up']],
-                    "max_lots": 0.03
-                },
-                {
-                    "id": "BUY_STOP_BREAKOUT",
-                    "type": "buystop",
-                    "entry": market_data['breakout_up'],
-                    "sl": market_data['breakout_up'] - 35,
-                    "tp": [market_data['breakout_up'] + 40, market_data['breakout_up'] + 80],
-                    "max_lots": 0.02
-                }
+                {"id": "BUY_LIMIT_CORE", "type": "buylimit", "entry": market_data['support'], "sl": market_data['support'] - 40, "tp": [market_data['resistance'], market_data['resistance'] + 30, market_data['breakout_up']], "max_lots": 0.03},
+                {"id": "BUY_STOP_BREAKOUT", "type": "buystop", "entry": market_data['breakout_up'], "sl": market_data['breakout_up'] - 35, "tp": [market_data['breakout_up'] + 40, market_data['breakout_up'] + 80], "max_lots": 0.02}
             ]
         }
     elif rsi < 45:
@@ -257,22 +238,8 @@ def default_strategy(market_data):
             "bias": "bajista",
             "reason": f"RSI en {rsi} indicando momentum bajista",
             "orders": [
-                {
-                    "id": "SELL_LIMIT_RESISTANCE",
-                    "type": "selllimit",
-                    "entry": market_data['resistance'],
-                    "sl": market_data['resistance'] + 40,
-                    "tp": [market_data['support'], market_data['support'] - 30, market_data['breakdown_down']],
-                    "max_lots": 0.03
-                },
-                {
-                    "id": "SELL_STOP_BREAKDOWN",
-                    "type": "sellstop",
-                    "entry": market_data['breakdown_down'],
-                    "sl": market_data['breakdown_down'] + 35,
-                    "tp": [market_data['breakdown_down'] - 40, market_data['breakdown_down'] - 80],
-                    "max_lots": 0.04
-                }
+                {"id": "SELL_LIMIT_RESISTANCE", "type": "selllimit", "entry": market_data['resistance'], "sl": market_data['resistance'] + 40, "tp": [market_data['support'], market_data['support'] - 30, market_data['breakdown_down']], "max_lots": 0.03},
+                {"id": "SELL_STOP_BREAKDOWN", "type": "sellstop", "entry": market_data['breakdown_down'], "sl": market_data['breakdown_down'] + 35, "tp": [market_data['breakdown_down'] - 40, market_data['breakdown_down'] - 80], "max_lots": 0.04}
             ]
         }
     else:
@@ -280,22 +247,8 @@ def default_strategy(market_data):
             "bias": "neutral",
             "reason": f"RSI en {rsi} indicando mercado lateral",
             "orders": [
-                {
-                    "id": "BUY_LIMIT_SUPPORT",
-                    "type": "buylimit",
-                    "entry": market_data['support'],
-                    "sl": market_data['support'] - 35,
-                    "tp": [market_data['current_price'], market_data['resistance']],
-                    "max_lots": 0.02
-                },
-                {
-                    "id": "SELL_LIMIT_RESISTANCE",
-                    "type": "selllimit",
-                    "entry": market_data['resistance'],
-                    "sl": market_data['resistance'] + 35,
-                    "tp": [market_data['current_price'], market_data['support']],
-                    "max_lots": 0.02
-                }
+                {"id": "BUY_LIMIT_SUPPORT", "type": "buylimit", "entry": market_data['support'], "sl": market_data['support'] - 35, "tp": [market_data['current_price'], market_data['resistance']], "max_lots": 0.02},
+                {"id": "SELL_LIMIT_RESISTANCE", "type": "selllimit", "entry": market_data['resistance'], "sl": market_data['resistance'] + 35, "tp": [market_data['current_price'], market_data['support']], "max_lots": 0.02}
             ]
         }
 
