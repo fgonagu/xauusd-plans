@@ -15,7 +15,6 @@ def get_spain_date():
     """Devuelve la fecha actual en horario español"""
     utc_now = datetime.utcnow()
     # Horario de verano en España: desde finales de marzo hasta finales de octubre
-    # Simplificado: de abril a octubre asumimos UTC+2, resto UTC+1
     if 4 <= utc_now.month <= 10:
         hours_offset = 2  # Horario de verano (UTC+2)
     else:
@@ -25,29 +24,53 @@ def get_spain_date():
     return spain_now.strftime("%Y-%m-%d")
 
 def get_market_data():
-    """Obtiene datos del mercado simulados basados en precio real actual"""
-    url = f"https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=1h&outputsize=100&apikey={TWELVE_DATA_KEY}"
-    # Precio actual de XAUUSD (~4724)
-    current_price = 4724.36
-    rsi = 52.5  # Neutral
-    sma50 = 4710.0
+    """Obtiene datos actuales del mercado desde Twelve Data"""
     
-    # Calcular niveles
-    support = round(current_price - (current_price * 0.008), 0)  # 4687
-    resistance = round(current_price + (current_price * 0.008), 0)  # 4762
-    breakout_up = round(current_price + (current_price * 0.015), 0)  # 4795
-    breakdown_down = round(current_price - (current_price * 0.015), 0)  # 4654
-    
-    return {
-        'current_price': current_price,
-        'rsi': rsi,
-        'sma50': sma50,
-        'support': support,
-        'resistance': resistance,
-        'breakout_up': breakout_up,
-        'breakdown_down': breakdown_down,
-        'timestamp': datetime.now().isoformat()
-    }
+    try:
+        # Probar diferentes formatos de símbolo
+        symbols_to_try = ["XAU/USD", "XAUUSD", "GOLD", "XAU"]
+        
+        for symbol in symbols_to_try:
+            url = f"https://api.twelvedata.com/time_series?symbol={symbol}&interval=1h&outputsize=100&apikey={TWELVE_DATA_KEY}"
+            
+            print(f"📡 Probando símbolo: {symbol}")
+            response = requests.get(url, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                if 'values' in data and data['values']:
+                    print(f"✅ Conectado con símbolo: {symbol}")
+                    prices = [float(c['close']) for c in data['values']]
+                    current_price = prices[-1]
+                    rsi = calculate_rsi(prices)
+                    sma50 = sum(prices[-50:]) / 50 if len(prices) >= 50 else current_price
+                    
+                    # Calcular niveles dinámicos basados en el precio real
+                    support = round(current_price - (current_price * 0.008), 0)
+                    resistance = round(current_price + (current_price * 0.008), 0)
+                    breakout_up = round(current_price + (current_price * 0.015), 0)
+                    breakdown_down = round(current_price - (current_price * 0.015), 0)
+                    
+                    return {
+                        'current_price': current_price,
+                        'rsi': rsi,
+                        'sma50': sma50,
+                        'support': support,
+                        'resistance': resistance,
+                        'breakout_up': breakout_up,
+                        'breakdown_down': breakdown_down,
+                        'timestamp': datetime.now().isoformat()
+                    }
+            else:
+                print(f"⚠️ {symbol} - Código: {response.status_code}")
+        
+        print("❌ No se pudo conectar con ningún símbolo")
+        return None
+            
+    except Exception as e:
+        print(f"❌ Excepción: {type(e).__name__}: {e}")
+        return None
 
 def calculate_rsi(prices, period=14):
     """Calcula el RSI manualmente"""
@@ -154,6 +177,7 @@ def generate_json():
     print(f"💰 Precio actual: {market_data['current_price']:.2f} USD")
     print(f"📈 RSI: {market_data['rsi']}")
     print(f"🎯 Soporte: {market_data['support']:.0f} | Resistencia: {market_data['resistance']:.0f}")
+    print(f"🚀 Breakout Up: {market_data['breakout_up']:.0f} | Breakdown Down: {market_data['breakdown_down']:.0f}")
     
     # 2. Analizar con Gemini
     print("🧠 Analizando con Gemini...")
