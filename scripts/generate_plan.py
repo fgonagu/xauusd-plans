@@ -26,7 +26,7 @@ def get_spain_date():
 
 def get_market_data():
     """Obtiene datos del mercado simulados basados en precio real actual"""
-    
+    url = f"https://api.twelvedata.com/time_series?symbol=XAU/USD&interval=1h&outputsize=100&apikey={TWELVE_DATA_KEY}"
     # Precio actual de XAUUSD (~4724)
     current_price = 4724.36
     rsi = 52.5  # Neutral
