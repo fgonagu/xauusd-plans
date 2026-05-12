@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import google.generativeai as genai
 
 # Configurar Gemini
@@ -11,11 +11,23 @@ genai.configure(api_key=GEMINI_API_KEY)
 # Configurar Twelve Data
 TWELVE_DATA_KEY = os.getenv('TWELVE_DATA_API_KEY')
 
+def get_spain_date():
+    """Devuelve la fecha actual en horario español"""
+    utc_now = datetime.utcnow()
+    # Horario de verano en España: desde finales de marzo hasta finales de octubre
+    # Simplificado: de abril a octubre asumimos UTC+2, resto UTC+1
+    if 4 <= utc_now.month <= 10:
+        hours_offset = 2  # Horario de verano (UTC+2)
+    else:
+        hours_offset = 1  # Horario de invierno (UTC+1)
+    
+    spain_now = utc_now + timedelta(hours=hours_offset)
+    return spain_now.strftime("%Y-%m-%d")
+
 def get_market_data():
     """Obtiene datos del mercado simulados basados en precio real actual"""
     
     # Precio actual de XAUUSD (~4724)
-    # En producción, aquí podrías usar una API confiable
     current_price = 4724.36
     rsi = 52.5  # Neutral
     sma50 = 4710.0
@@ -155,9 +167,9 @@ def generate_json():
     print(f"🎯 Sesgo detectado: {strategy.get('bias', 'neutral').upper()}")
     print(f"📋 Órdenes generadas: {len(strategy.get('orders', []))}")
     
-    # 4. Construir JSON final
+    # 4. Construir JSON final con fecha en horario español
     json_plan = {
-        "date": datetime.now().strftime("%Y-%m-%d"),
+        "date": get_spain_date(),
         "symbols": [
             {
                 "symbol": "XAUUSD..",
@@ -184,6 +196,7 @@ def generate_json():
     print("=" * 50)
     print("✅ JSON generado correctamente")
     print(f"📁 Archivo: gold_plan.json")
+    print(f"📅 Fecha generada: {get_spain_date()}")
     
     return True
 
