@@ -133,7 +133,7 @@ def analyze_with_gemini(market_data):
     try:
         # Usar el nuevo modelo
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-1.5-pro",
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.2)
         )
