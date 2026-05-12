@@ -2,12 +2,12 @@ name: 🤖 Análisis Diario XAUUSD
 
 on:
   schedule:
-    # Ejecutar todos los días a las 23:00 UTC (00:00 hora española)
+    # Ejecutar a las 23:00 UTC (00:00 hora española)
     - cron: '0 23 * * *'
-  workflow_dispatch:  # Permite ejecución manual también
+  workflow_dispatch:  # Permite ejecutar manualmente
 
 jobs:
-  analyze-and-update:
+  analyze:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -23,12 +23,13 @@ jobs:
       
       - name: 📦 Instalar dependencias
         run: |
-          pip install requests pandas numpy ta-lib
+          pip install requests google-generativeai
       
       - name: 🔍 Ejecutar análisis de XAUUSD
         run: python scripts/generate_plan.py
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
       
       - name: 📤 Subir cambios a GitHub
         run: |
