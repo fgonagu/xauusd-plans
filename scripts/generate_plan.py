@@ -81,72 +81,127 @@ def calculate_rsi(prices, period=14):
     return round(rsi, 1)
 
 def analyze_with_gemini(market_data):
-    """Usa Gemini (gemini-2.5-flash) para generar el plan de trading"""
+    """Usa Gemini (gemini-2.5-flash) para generar el plan de trading profesional"""
     
     prompt = f"""
-    Eres un experto trader de XAUUSD (oro). Basado en estos datos actuales:
+    ACTÚA COMO UN PROP TRADER EXPERTO EN XAUUSD (ORO) CON 15 AÑOS DE EXPERIENCIA.
     
-    📊 PRECIO ACTUAL: {market_data['current_price']:.2f} USD
-    📈 RSI (14 períodos): {market_data['rsi']}
-    📉 SMA 50: {market_data['sma50']:.2f} USD
+    ========================================
+    📊 DATOS ACTUALES DEL MERCADO
+    ========================================
+    • Precio actual: {market_data['current_price']:.2f} USD
+    • RSI (14 períodos): {market_data['rsi']}
+    • SMA 50: {market_data['sma50']:.2f} USD
     
-    🎯 Niveles calculados automáticamente:
-    - SOPORTE: {market_data['support']:.0f} USD
-    - RESISTENCIA: {market_data['resistance']:.0f} USD
-    - BREAKOUT ALCISTA: {market_data['breakout_up']:.0f} USD
-    - BREAKDOWN BAJISTA: {market_data['breakdown_down']:.0f} USD
+    🎯 NIVELES TÉCNICOS CLAVE:
+    • Soporte inmediato: {market_data['support']:.0f} USD
+    • Resistencia inmediata: {market_data['resistance']:.0f} USD
+    • Breakout alcista (confirmación): {market_data['breakout_up']:.0f} USD
+    • Breakdown bajista (confirmación): {market_data['breakdown_down']:.0f} USD
     
-    GENERA UN PLAN DE TRADING CON:
+    ========================================
+    📈 ANÁLISIS TÉCNICO PROFESIONAL
+    ========================================
     
-    1. Sesgo del mercado (alcista si RSI > 55, bajista si RSI < 45)
-    2. Si es ALCISTA: da prioridad a órdenes de COMPRA
-    3. Si es BAJISTA: da prioridad a órdenes de VENTA
-    4. Siempre incluye stop loss y 2-3 take profits
+    Basándote en estos datos, realiza un análisis completo:
     
-    RESPUESTE SOLO CON JSON. Ejemplo:
+    1. **ESTRUCTURA DEL MERCADO**
+       - ¿Tendencia alcista, bajista o lateral?
+       - ¿Hay divergencias entre precio e indicadores?
+       - ¿El RSI indica sobrecompra/sobreventa?
+    
+    2. **CONFLUENCIA DE NIVELES**
+       - Identifica zonas de soporte y resistencia significativas
+       - Señala niveles de Fibonacci relevantes si aplica
+       - Determina puntos de inflexión probables
+    
+    3. **ESCENARIOS DE TRADING**
+       - Escenario principal (mayor probabilidad)
+       - Escenario alternativo (si falla el principal)
+       - Zonas de invalidación
+    
+    ========================================
+    🎯 GENERACIÓN DE ÓRDENES
+    ========================================
+    
+    Crea un plan de trading que INCLUYA LAS ÓRDENES QUE CONSIDERES OPORTUNAS SEGÚN TU ANÁLISIS.
+    
+    REGLAS PARA ÓRDENES:
+    • Mínimo 0 órdenes, máximo 6 órdenes (dependiendo de las oportunidades)
+    • Para CADA orden incluye: ID, tipo, entry, SL, TP (2-3 niveles), max_lots
+    • Los lotes deben variar según la confianza de la operación (0.01 a 0.05)
+    • Tipos permitidos: buylimit, selllimit, buystop, sellstop
+    
+    ESTRATEGIAS POSIBLES:
+    • Pullback en tendencia (LIMIT en soporte/resistencia)
+    • Breakout confirmado (STOP tras ruptura)
+    • Rango (LIMIT en ambos extremos)
+    • Scalping en niveles clave (entradas rápidas)
+    • Swing con stops amplios
+    
+    ========================================
+    📋 FORMATO DE RESPUESTA (SOLO JSON)
+    ========================================
+    
     {{
         "bias": "alcista/bajista/neutral",
-        "reason": "breve razón técnica",
+        "strength": "fuerte/moderado/débil",
+        "analysis_summary": "Resumen ejecutivo del análisis en 1 línea",
+        "market_phase": "tendencia/rango/transición",
+        "volatility_assessment": "alta/media/baja",
+        "key_levels": {{
+            "main_support": {market_data['support']:.0f},
+            "main_resistance": {market_data['resistance']:.0f},
+            "critical_stop": 0
+        }},
         "orders": [
             {{
-                "id": "ORDEN_PRINCIPAL",
+                "id": "NOMBRE_DESCRIPTIVO",
                 "type": "selllimit",
-                "entry": {market_data['resistance']:.0f},
-                "sl": {market_data['resistance'] + 40:.0f},
-                "tp": [{market_data['support']:.0f}, {market_data['support'] - 30:.0f}],
-                "max_lots": 0.03
-            }},
-            {{
-                "id": "ORDEN_SECUNDARIA",
-                "type": "sellstop",
-                "entry": {market_data['breakdown_down']:.0f},
-                "sl": {market_data['breakdown_down'] + 35:.0f},
-                "tp": [{market_data['breakdown_down'] - 40:.0f}, {market_data['breakdown_down'] - 80:.0f}],
-                "max_lots": 0.04
+                "entry": 0,
+                "sl": 0,
+                "tp": [0, 0, 0],
+                "max_lots": 0.00,
+                "confidence": "alta/media/baja",
+                "strategy": "pullback/breakout/rango/swing"
             }}
         ]
     }}
     
-    IMPORTANTE: Ajusta los valores según el RSI y el sesgo.
+    IMPORTANTE:
+    - Ajusta el número de órdenes a las oportunidades REALES del mercado
+    - Si el mercado no ofrece oportunidades claras, genera 0 órdenes
+    - Si hay múltiples oportunidades, genera hasta 6 órdenes
+    - Prioriza calidad sobre cantidad
     """
     
     try:
-        # Usar gemini-2.5-flash (más rápido y mayor límite gratuito)
+        # Usar gemini-2.5-flash con temperatura baja para consistencia
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt,
-            config=types.GenerateContentConfig(temperature=0.2)
+            config=types.GenerateContentConfig(
+                temperature=0.2,
+                top_p=0.95,
+                top_k=40
+            )
         )
         
         if response.text:
             import re
+            # Buscar JSON en la respuesta
             json_match = re.search(r'\{.*\}', response.text, re.DOTALL)
             if json_match:
                 strategy = json.loads(json_match.group())
-                print(f"✨ Gemini ha generado la estrategia: {strategy.get('bias', 'neutral')}")
+                bias = strategy.get('bias', 'neutral')
+                order_count = len(strategy.get('orders', []))
+                print(f"✨ [Gemini] Estrategia {bias.upper()} - {order_count} órdenes generadas")
+                if 'analysis_summary' in strategy:
+                    print(f"📝 Resumen: {strategy['analysis_summary']}")
                 return strategy
             else:
                 print("⚠️ No se pudo extraer JSON de la respuesta de Gemini")
+                print(f"Respuesta recibida: {response.text[:300]}...")
                 return None
         else:
             print("⚠️ Respuesta vacía de Gemini")
