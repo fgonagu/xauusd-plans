@@ -264,7 +264,7 @@ def generate_json():
     
     # 5. Guardar JSON
     with open('gold_plan.json', 'w') as f:
-        json.dump(json_plan, f, indent=2)
+        json.dump(json_plan, f, separators=(',', ':'))
     
     print("=" * 50)
     print("✅ JSON generado correctamente")
