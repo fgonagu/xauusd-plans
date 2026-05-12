@@ -2,9 +2,8 @@ name: 🤖 Análisis Diario XAUUSD
 
 on:
   schedule:
-    # Ejecutar a las 23:00 UTC (00:00 hora española)
     - cron: '0 23 * * *'
-  workflow_dispatch:  # Permite ejecutar manualmente
+  workflow_dispatch:
 
 jobs:
   analyze:
