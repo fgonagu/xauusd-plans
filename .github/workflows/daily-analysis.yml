@@ -1,1 +1,39 @@
+name: 🤖 Análisis Diario XAUUSD
 
+on:
+  schedule:
+    # Ejecutar todos los días a las 23:00 UTC (00:00 hora española)
+    - cron: '0 23 * * *'
+  workflow_dispatch:  # Permite ejecución manual también
+
+jobs:
+  analyze-and-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: 📥 Clonar repositorio
+        uses: actions/checkout@v4
+      
+      - name: 🐍 Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 📦 Instalar dependencias
+        run: |
+          pip install requests pandas numpy ta-lib
+      
+      - name: 🔍 Ejecutar análisis de XAUUSD
+        run: python scripts/generate_plan.py
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      
+      - name: 📤 Subir cambios a GitHub
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "bot@github.com"
+          git add gold_plan.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Actualización diaria XAUUSD $(date '+%Y-%m-%d')"
+          git push
