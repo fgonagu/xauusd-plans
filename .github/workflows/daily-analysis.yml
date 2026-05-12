@@ -22,7 +22,7 @@ jobs:
       
       - name: 📦 Instalar dependencias
         run: |
-          pip install requests google-generativeai
+          pip install requests google-genai
       
       - name: 🔍 Ejecutar análisis de XAUUSD
         run: python scripts/generate_plan.py
