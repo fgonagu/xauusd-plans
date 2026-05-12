@@ -5,27 +5,60 @@
       "symbol": "XAUUSD..",
       "orders": [
         {
-          "id": "ORDEN_PRINCIPAL",
+          "id": "SELL_RESISTANCE_PULLBACK",
           "type": "selllimit",
-          "entry": 4756,
-          "sl": 4796,
+          "entry": 4755.0,
+          "sl": 4768.0,
           "tp": [
-            4676,
-            4636,
-            4596
+            4725.0,
+            4695.0,
+            4678.0
           ],
-          "max_lots": 0.03
+          "max_lots": 0.03,
+          "confidence": "media",
+          "strategy": "pullback"
         },
         {
-          "id": "ORDEN_SECUNDARIA",
-          "type": "sellstop",
-          "entry": 4636,
-          "sl": 4671,
+          "id": "BUY_SUPPORT_PULLBACK",
+          "type": "buylimit",
+          "entry": 4677.0,
+          "sl": 4663.0,
           "tp": [
-            4596,
-            4556
+            4705.0,
+            4735.0,
+            4754.0
           ],
-          "max_lots": 0.04
+          "max_lots": 0.03,
+          "confidence": "media",
+          "strategy": "pullback"
+        },
+        {
+          "id": "BUY_BREAKOUT_UP",
+          "type": "buystop",
+          "entry": 4760.0,
+          "sl": 4745.0,
+          "tp": [
+            4780.0,
+            4796.0,
+            4810.0
+          ],
+          "max_lots": 0.04,
+          "confidence": "alta",
+          "strategy": "breakout"
+        },
+        {
+          "id": "SELL_BREAKDOWN_DOWN",
+          "type": "sellstop",
+          "entry": 4672.0,
+          "sl": 4687.0,
+          "tp": [
+            4655.0,
+            4636.0,
+            4620.0
+          ],
+          "max_lots": 0.04,
+          "confidence": "alta",
+          "strategy": "breakout"
         }
       ]
     }
