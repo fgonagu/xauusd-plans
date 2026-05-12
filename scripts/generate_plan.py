@@ -81,7 +81,7 @@ def calculate_rsi(prices, period=14):
     return round(rsi, 1)
 
 def analyze_with_gemini(market_data):
-    """Usa Gemini (nueva librería) para generar el plan de trading"""
+    """Usa Gemini (gemini-2.5-flash) para generar el plan de trading"""
     
     prompt = f"""
     Eres un experto trader de XAUUSD (oro). Basado en estos datos actuales:
@@ -131,9 +131,9 @@ def analyze_with_gemini(market_data):
     """
     
     try:
-        # Usar el nuevo modelo
+        # Usar gemini-2.5-flash (más rápido y mayor límite gratuito)
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
             config=types.GenerateContentConfig(temperature=0.2)
         )
@@ -155,7 +155,6 @@ def analyze_with_gemini(market_data):
     except Exception as e:
         print(f"❌ Error con Gemini: {e}")
         return None
-
 def generate_json():
     """Genera el JSON final para el EA"""
     
