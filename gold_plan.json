@@ -5,25 +5,25 @@
       "symbol": "XAUUSD..",
       "orders": [
         {
-          "id": "SELL_LIMIT_RESISTANCE",
+          "id": "ORDEN_PRINCIPAL",
           "type": "selllimit",
-          "entry": 4756.0,
-          "sl": 4796.0,
+          "entry": 4756,
+          "sl": 4796,
           "tp": [
-            4676.0,
-            4646.0,
-            4636.0
+            4676,
+            4636,
+            4596
           ],
           "max_lots": 0.03
         },
         {
-          "id": "SELL_STOP_BREAKDOWN",
+          "id": "ORDEN_SECUNDARIA",
           "type": "sellstop",
-          "entry": 4636.0,
-          "sl": 4671.0,
+          "entry": 4636,
+          "sl": 4671,
           "tp": [
-            4596.0,
-            4556.0
+            4596,
+            4556
           ],
           "max_lots": 0.04
         }
