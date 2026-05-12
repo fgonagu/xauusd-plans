@@ -1,7 +1,43 @@
-{"date":"2026-05-12","symbols":[{"symbol":"XAUUSD..","orders":[
-{"id":"SELL_LIMIT_RESISTANCE","type":"selllimit","entry":4748.0,"sl":4778.0,"tp":[4700.0,4660.0,4600.0],"max_lots":0.03},
-{"id":"BUY_LIMIT_SUPPORT","type":"buylimit","entry":4674.0,"sl":4633.0,"tp":[4720.0,4755.0,4790.0],"max_lots":0.01},
-{"id":"BUY_STOP_BREAKOUT","type":"buystop","entry":4775.0,"sl":4735.0,"tp":[4810.0,4850.0,4889.0],"max_lots":0.02},
-{"id":"SELL_STOP_BREAKDOWN_OLD","type":"sellstop","entry":4655.0,"sl":4690.0,"tp":[4620.0,4590.0,4550.0],"max_lots":0.03},
-{"id":"SELL_STOP_BREAKDOWN_AGGRESSIVE","type":"sellstop","entry":4645.0,"sl":4680.0,"tp":[4600.0,4560.0,4517.0],"max_lots":0.04}
-]}],"management":{"breakeven_trigger_pips":200.0,"breakeven_lock_pips":40.0,"trailing_start_pips":250.0,"trailing_step_pips":70.0,"delete_pending_at_end_of_day":true,"trade_start_hour":6,"trade_end_hour":21,"max_risk_per_trade_percent":1.0,"max_daily_loss_percent":100.0}}
+{
+  "date": "2026-05-12",
+  "symbols": [
+    {
+      "symbol": "XAUUSD..",
+      "orders": [
+        {
+          "id": "BUY_LIMIT_SUPPORT",
+          "type": "buylimit",
+          "entry": 4687.0,
+          "sl": 4652.0,
+          "tp": [
+            4724.35852,
+            4762.0
+          ],
+          "max_lots": 0.02
+        },
+        {
+          "id": "SELL_LIMIT_RESISTANCE",
+          "type": "selllimit",
+          "entry": 4762.0,
+          "sl": 4797.0,
+          "tp": [
+            4724.35852,
+            4687.0
+          ],
+          "max_lots": 0.02
+        }
+      ]
+    }
+  ],
+  "management": {
+    "breakeven_trigger_pips": 200.0,
+    "breakeven_lock_pips": 40.0,
+    "trailing_start_pips": 250.0,
+    "trailing_step_pips": 70.0,
+    "delete_pending_at_end_of_day": true,
+    "trade_start_hour": 6,
+    "trade_end_hour": 21,
+    "max_risk_per_trade_percent": 1.0,
+    "max_daily_loss_percent": 100.0
+  }
+}
