@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: '0 3 * * *' # Ejecuta a las 5:00 AM hora española
   workflow_dispatch:
+  push:
+    branches:
+      - main   # Esto hará que se ejecute con cada push (temporal)
 
 jobs:
   analyze:
