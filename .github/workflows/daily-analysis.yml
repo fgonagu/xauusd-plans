@@ -2,7 +2,7 @@ name: 🤖 Análisis Diario XAUUSD
 
 on:
   schedule:
-    - cron: '*/30 * * * *'   # Se ejecuta CADA 30 MINUTOS (para pruebas)
+    - cron: '*/5 * * * *'   # Se ejecuta CADA 30 MINUTOS (para pruebas)
   workflow_dispatch:
   push:
     branches:
