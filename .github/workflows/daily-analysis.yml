@@ -1,12 +1,10 @@
-name: 🤖 Análisis Diario XAUUSD
+name: 🤖 Análisis XAUUSD (Manual)
 
 on:
-  schedule:
-    - cron: '5,10,15,20,25,30,35,40,45,50,55 * * * *'   # Se ejecuta CADA 30 MINUTOS (para pruebas)
-  workflow_dispatch:
+  workflow_dispatch:  # Solo ejecución manual
   push:
     branches:
-      - main   # Esto hará que se ejecute con cada push (temporal)
+      - main
 
 jobs:
   analyze:
@@ -38,5 +36,5 @@ jobs:
           git config --global user.name "GitHub Action Bot"
           git config --global user.email "bot@github.com"
           git add gold_plan.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Actualización diaria XAUUSD $(date '+%Y-%m-%d')"
+          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Actualización manual XAUUSD $(date '+%Y-%m-%d %H:%M')"
           git push
